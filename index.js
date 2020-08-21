@@ -43,11 +43,11 @@ const createWordButtons = (word = '', id, chars = []) => {
 }
 
 app.use(async (ctx, next) => {
-  const id = ctx.inlineMessageId;
-  if (!id) {
+  const { inlineMessageId, from } = ctx;
+  if (!inlineMessageId) {
     return next();
   }
-  const game = await Game.findOne({ gameId: id });
+  const game = await Game.findOne({ gameId: inlineMessageId, 'secondPlayer.id': from.id });
   ctx.state.currentGame = game || null;
   next();
 });
