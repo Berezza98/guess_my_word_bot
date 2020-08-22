@@ -26,7 +26,7 @@ const devideArray = (arr, number = 5, emptyEl = Markup.callbackButton(' ', ' '))
   return resultArray;
 };
 
-const createWordButtons = (word = '', id, chars = []) => {
+const createWordButtons = (word = '', showInviteButton, chars = []) => {
   const wordButtons = devideArray(word.split('').map(el => {
     return Markup.callbackButton(chars.includes(el) ? el : '*' , ' ');
   }));
@@ -35,8 +35,8 @@ const createWordButtons = (word = '', id, chars = []) => {
   const charKeyboard = devideArray(uk_keyboard_chars.map(el => Markup.callbackButton(el, el)));
   wordButtons.push(...charKeyboard);
 
-  if (id) {
-    wordButtons.push([Markup.callbackButton('Прийняти гру', `join_${id}`)]);
+  if (showInviteButton) {
+    wordButtons.push([Markup.callbackButton('Прийняти гру', 'join')]);
   }
 
   return Markup.inlineKeyboard(wordButtons);
@@ -60,13 +60,16 @@ app.on('text', (ctx) => {
   );
 });
 
-app.inlineQuery(async (wordToGuess, ctx) => {
-  const gameId = uuidv4();
+app.on('chosen_inline_result', async (ctx) => {
+  const  { from, inline_message_id, query } = ctx.update.chosen_inline_result;
   await new Game({
-    gameId,
-    wordToGuess,
-    firstPlayer: ctx.from
+    gameId: inline_message_id,
+    wordToGuess: query,
+    firstPlayer: from
   }).save();
+});
+
+app.inlineQuery(async (wordToGuess, ctx) => {
   await ctx.answerInlineQuery([
     {
       type: 'article',
@@ -75,13 +78,13 @@ app.inlineQuery(async (wordToGuess, ctx) => {
       input_message_content: {
         message_text: 'Почати Гру'
       },
-      reply_markup: createWordButtons(wordToGuess, gameId)
+      reply_markup: createWordButtons(wordToGuess, true)
     }
   ]);
 });
 
-app.action(/^join_(.*)$/, async (ctx) => {
-  const gameId = ctx.match[1] || null;
+app.action('join', async (ctx) => {
+  const gameId = ctx.inlineMessageId;
   const neededGame = await Game.findOne({ gameId });
   if (!neededGame) {
     return ctx.answerCbQuery('Даної гри не існує, будь ласка, створіть нову гру!');
@@ -90,7 +93,6 @@ app.action(/^join_(.*)$/, async (ctx) => {
     return ctx.answerCbQuery('Ви не можете прийняти свою ж гру!');
   }
   neededGame.secondPlayer = ctx.from;
-  neededGame.gameId = ctx.inlineMessageId;
   await neededGame.save();
   ctx.answerCbQuery('Ви прийняли гру!');
   ctx.editMessageText(`Гру прийнято!`, {
@@ -102,6 +104,9 @@ app.action(uk_keyboard_chars, async (ctx, next) => {
   const { currentGame } = ctx.state;
   if (!currentGame) {
     return next();
+  }
+  if (currentGame.usedChars.includes(ctx.match)) {
+    return ctx.answerCbQuery(`Ви вже обирали дану букву!(${ctx.match})`);
   }
   currentGame.usedChars.push(ctx.match);
   if (!currentGame.wordToGuess.includes(ctx.match)) {
