@@ -113,13 +113,15 @@ app.action(uk_keyboard_chars, async (ctx, next) => {
     currentGame.attempts -= 1;
     ctx.answerCbQuery(`Буква не вгадана, залишилось спроб: ${currentGame.attempts}!`);
     if (currentGame.attempts <= 0) {
-      ctx.editMessageText(`Ви програли! слово: "${currentGame.wordToGuess}"`);
+      await Game.deleteOne({ gameId: currentGame.gameId });
+      return ctx.editMessageText(`Ви програли! слово: "${currentGame.wordToGuess}"`);
     }
   } else {
     const won = currentGame.wordToGuess.split('').every(el => currentGame.usedChars.includes(el));
     if (won) {
+      await Game.deleteOne({ gameId: currentGame.gameId });
       ctx.answerCbQuery(`Ви виграли!`);
-      ctx.editMessageText(`Ви виграли! слово: "${currentGame.wordToGuess}"`);
+      return ctx.editMessageText(`Ви виграли! слово: "${currentGame.wordToGuess}"`);
     } else {
       ctx.answerCbQuery(`Буква вгадана, залишилось спроб: ${currentGame.attempts}!`);
       ctx.editMessageText(`Буква вгадана: ${ctx.match}`, {
