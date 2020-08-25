@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const { Telegraf } = require('telegraf');
 const Markup = require('telegraf/markup');
 const Extra = require('telegraf/extra');
-const { v4: uuidv4 } = require('uuid');
 
 const Game = require('./models/Game');
 
@@ -137,9 +136,15 @@ app.action(async (match, ctx) => {
 });
 
 async function main() {
+  const { MONGO_DB, TELEGRAM_API_KEY, BOT_URL, PORT } = process.env;
   try {
-    await mongoose.connect(process.env.MONGO_DB, { useNewUrlParser: true });
-    await app.launch();
+    await mongoose.connect(MONGO_DB, { useNewUrlParser: true });
+    if (process.env.NODE_ENV === 'production') {
+      app.telegram.setWebhook(`${BOT_URL}/bot${TELEGRAM_API_KEY}`);
+      bot.startWebhook(`/bot${TELEGRAM_API_KEY}`, null, PORT);
+    } else {
+      await app.launch();
+    }
     console.log('CONNECTED TO DB AND LAUNCHED');
   } catch (error) {
     console.log(error);
