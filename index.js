@@ -140,7 +140,7 @@ async function main() {
   try {
     await mongoose.connect(MONGOLAB_URI, { useNewUrlParser: true });
     if (process.env.NODE_ENV === 'production') {
-      console.log(`${BOT_URL}bot${TELEGRAM_API_KEY}`);
+      console.log(`${BOT_URL}bot${TELEGRAM_API_KEY}`, PORT);
       app.telegram.setWebhook(`${BOT_URL}bot${TELEGRAM_API_KEY}`);
       app.startWebhook(`bot${TELEGRAM_API_KEY}`, null, PORT);
     } else {
