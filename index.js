@@ -136,9 +136,9 @@ app.action(async (match, ctx) => {
 });
 
 async function main() {
-  const { MONGO_DB, TELEGRAM_API_KEY, BOT_URL, PORT } = process.env;
+  const { MONGOLAB_URI, TELEGRAM_API_KEY, BOT_URL, PORT } = process.env;
   try {
-    await mongoose.connect(MONGO_DB, { useNewUrlParser: true });
+    await mongoose.connect(MONGOLAB_URI, { useNewUrlParser: true });
     if (process.env.NODE_ENV === 'production') {
       app.telegram.setWebhook(`${BOT_URL}/bot${TELEGRAM_API_KEY}`);
       app.startWebhook(`/bot${TELEGRAM_API_KEY}`, null, PORT);
