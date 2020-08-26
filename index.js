@@ -144,7 +144,7 @@ async function main() {
     if (process.env.NODE_ENV === 'production') {
       console.log(`${BOT_URL}/bot${TELEGRAM_API_KEY}`, PORT);
       app.telegram.setWebhook(`${BOT_URL}/bot${TELEGRAM_API_KEY}`);
-      expressApp.use(bot.webhookCallback(`/bot${TELEGRAM_API_KEY}`));
+      expressApp.use(app.webhookCallback(`/bot${TELEGRAM_API_KEY}`));
       expressApp.get('/', (req, res) => {
         res.send('Hello World!');
       });
