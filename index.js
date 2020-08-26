@@ -1,4 +1,5 @@
 require('dotenv').config();
+const express = require('express');
 const mongoose = require('mongoose');
 const { Telegraf } = require('telegraf');
 const Markup = require('telegraf/markup');
@@ -6,6 +7,7 @@ const Extra = require('telegraf/extra');
 
 const Game = require('./models/Game');
 
+const expressApp = express();
 const app = new Telegraf(process.env.TELEGRAM_API_KEY);
 
 const uk_keyboard_chars = ['а', 'б', 'в', 'г', 'ґ', 'д', 'е', 'є', 'ж', 'з', 'и', 'і', 'ї', 'й', 'к', 'л', 'м', 'н', 'о', 'п', 'р', 'с', 'т', 'у', 'ф', 'х', 'ц', 'ч', 'ш', 'щ', 'ь', 'ю', 'я'];
@@ -140,9 +142,15 @@ async function main() {
   try {
     await mongoose.connect(MONGOLAB_URI, { useNewUrlParser: true });
     if (process.env.NODE_ENV === 'production') {
-      console.log(`${BOT_URL}bot${TELEGRAM_API_KEY}`, PORT);
-      app.telegram.setWebhook(`${BOT_URL}bot${TELEGRAM_API_KEY}`);
-      app.startWebhook(`bot${TELEGRAM_API_KEY}`, null, PORT);
+      console.log(`${BOT_URL}/bot${TELEGRAM_API_KEY}`, PORT);
+      app.telegram.setWebhook(`${BOT_URL}/bot${TELEGRAM_API_KEY}`);
+      expressApp.use(bot.webhookCallback(`/bot${TELEGRAM_API_KEY}`));
+      expressApp.get('/', (req, res) => {
+        res.send('Hello World!');
+      });
+      expressApp.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+      });
     } else {
       await app.launch();
     }
